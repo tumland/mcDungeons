@@ -1,5 +1,5 @@
-name: WorldguardDifficulty
-main: com.coffeejawa.WorldguardDifficulty.WorldguardDifficulty
+name: mcDungeons
+main: com.coffeejawa.mcDungeons.mcDungeons
 version: 0.5
 authors: [tumland]
 description: Worldguard Difficult allows monster difficulty adjustment in Worldguard regions.
@@ -7,40 +7,50 @@ description: Worldguard Difficult allows monster difficulty adjustment in Worldg
 softdepend: [ WorldGuard ]
 
 commands:
-    WGD:
+    mcd:
         description: Root command for all  WorldguardDifficulty Commands.
-        aliases: wgd
-        usage: /wgd [add|set|list|reset|remove|debug]
-        permission: wgd.help
-        permission-message: You require permission wgd.help to do that.
+        aliases: mcd
+        usage: /mcd <region|level|debug> [add|set|list|reset|remove]
+        permission: mcd.help
+        permission-message: You require permission mcd.help to do that.
         
 permissions:
-    wgd.*:
+    mcd.*:
         description: Gives access to all WorldguardDifficulty commands/functions.
         default: op
         children:
-            wgd.add: true
-            wgd.debug: true
-            wgd.help: true
-            wgd.remove: true
-            wgd.reset: true
+            mcd.add: true
+            mcd.debug: true
+            mcd.help: true
+            mcd.remove: true
+            mcd.set: true
+            mcd.list: true
+            mcd.reset: true
 
-    wgd.add:
+    mcd.add:
         description: Allows user to add region mappings.
         default: false
         
-    wgd.remove:
+    mcd.set:
+        description: Allows user to overwrite settings.
+        default: false
+        
+    mcd.list:
+        description: Allows user to list levels, regions and settings.
+        default: false
+        
+    mcd.remove:
         description: Allow user to remove mapping for a region ID.
         default: false
         
-    wgd.reset:
+    mcd.reset:
            description: Allow user to reset region to default settings.
            default: false
     
-    wgd.debug:
+    mcd.debug:
         description: Allows user to toggle debug on and off.
         default: false
 
-    wgd.help:
+    mcd.help:
         description: Allows user to view command help text.
         default: false

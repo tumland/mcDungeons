@@ -1,4 +1,4 @@
-package com.coffeejawa.WorldguardDifficulty;
+package com.coffeejawa.mcDungeons.Entities;
 
 import net.minecraft.server.EntityCreature;
 import net.minecraft.server.Navigation;
@@ -7,12 +7,16 @@ import net.minecraft.server.World;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftCreature;
 import org.bukkit.entity.Zombie;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.entity.EntityEvent;
 
-public class WgdZombie extends net.minecraft.server.EntityZombie{
+import com.coffeejawa.mcDungeons.Entities.ZombieMoveEvent;
+
+public class mcdZombie extends net.minecraft.server.EntityZombie{
 
     private float speed;
     
-    public WgdZombie(World world) {
+    public mcdZombie(World world) {
         super(world);
         speed = 0.1f;
     }
@@ -27,12 +31,10 @@ public class WgdZombie extends net.minecraft.server.EntityZombie{
           nav.a(this.speed);
           
         ZombieMoveEvent event = new ZombieMoveEvent(zombie, from, to, nav);
-        if (event.isCancelled() || zombie.isDead()){
-            return;
+        if (!event.isCancelled() && !zombie.isDead()){
+            this.world.getServer().getPluginManager().callEvent(event);
         }
         
-        this.world.getServer().getPluginManager().callEvent(event);
-               
         super.F_();
     }
 
@@ -43,6 +45,7 @@ public class WgdZombie extends net.minecraft.server.EntityZombie{
     public void setSpeed(float speed) {
         this.speed = speed;
     }
+    
     
     
 }
