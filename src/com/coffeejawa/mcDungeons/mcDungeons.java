@@ -156,18 +156,19 @@ public class mcDungeons extends JavaPlugin {
         return this.levelConfigManager;
     }
     
-
-    
     public void triggerDungeonSpawns(String dungeonName){
         getDungeonConfigManager().getDungeonByName(dungeonName).triggerSpawns();
     }
-    
     
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		String name = cmd.getName();
 		if (name.equalsIgnoreCase("mcd")){
 			// check the first arg and call any appropriate nested parsers
 			if(args.length == 0){
+			    if(!checkPermission(sender,"mcd.help")){
+			        return true;
+			    }
+			    
 				sender.sendMessage("mcDungeons Command Interface");
 				sender.sendMessage("Usage: /mcd <region|level|debug> [add|set|list|reset|remove]");
 			}
@@ -184,6 +185,10 @@ public class mcDungeons extends JavaPlugin {
 //				    handleDungeonCommand(sender, Arrays.copyOfRange(args, 1, args.length));
 //				}
 				else if(arg.equalsIgnoreCase("debug")){
+				    if(!checkPermission(sender,"mcd.debug")){
+				        return true;
+				    }
+				    
 					if(getConfig().getBoolean("debug")){
 						getConfig().set("debug", false);
 						sender.sendMessage("Toggled DEBUG mode to OFF");
@@ -202,6 +207,17 @@ public class mcDungeons extends JavaPlugin {
 	
 	
 	private boolean handleDungeonCommand(CommandSender sender, String[] args){
+	
+       if(args.length < 1){
+            // display help
+            sender.sendMessage("Usage: /mcd dungeon [edit|finish|remove]");
+            return true;
+        }
+    
+       if(!checkPermission(sender,"mcd.dungeons")){
+           return true;
+       }
+	    
 	    String arg = args[0];
         if(arg.equalsIgnoreCase("edit")){
             if(args.length != 2){
@@ -278,7 +294,11 @@ public class mcDungeons extends JavaPlugin {
         if(args.length < 1){
             // display help
             sender.sendMessage("Usage: /mcd region [add|set|list|reset|remove]");
-            return false;
+            return true;
+        }
+        
+        if(!checkPermission(sender,"mcd.regions")){
+            return true;
         }
         
         String arg = args[0];
@@ -288,13 +308,9 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Usage: /mcd region add <regionID>");
                 sender.sendMessage("Description: adds region to regions config");
                 sender.sendMessage("with default values. Must be same as worldguard id.");
-                return false;
+                return true;
             }
 
-            if(!sender.hasPermission("mcd.add")){
-                sender.sendMessage("Add failed: requires permission" + "mcd.add");
-                return false;
-            }
 
             // make sure the region exists in worldguard
             WorldGuardHelper wgHelper = new WorldGuardHelper(this);
@@ -303,9 +319,13 @@ public class mcDungeons extends JavaPlugin {
                 return true;
             }
             for( World world : getServer().getWorlds() ){
-                String regionType = wgHelper.getRegionType(args[1],world);
-                if(!regionType.equalsIgnoreCase("cuboid"))
-                    sender.sendMessage("Region add failed: unsupported region type");
+                if(wgHelper.isRegion(args[1], world)){
+                    String regionType = wgHelper.getRegionType(args[1],world);
+                    if(!regionType.equalsIgnoreCase("cuboid")){
+                        sender.sendMessage("Region add failed: unsupported region type");
+                        return true;
+                    }
+                }
             }
              
             // add new region define
@@ -319,18 +339,14 @@ public class mcDungeons extends JavaPlugin {
             }
             else{
                 sender.sendMessage("Error: region already exists in config.");
-                return false;
+                return true;
             }
         }
         else if (arg.equalsIgnoreCase("set")){
             if(args.length != 4){
                 sender.sendMessage("Usage: /mcd set <regionID> <property name> <value>");
                 sender.sendMessage("Description: Sets region property values");
-                return false;
-            }
-            if(!sender.hasPermission("mcd.set")){
-                sender.sendMessage("Add failed: requires permission" + "mcd.set");
-                return false;
+                return true;
             }
             String sectionName = "regions."+args[1];
             String propName = args[2];
@@ -339,11 +355,13 @@ public class mcDungeons extends JavaPlugin {
             // Is the property Name in list of known args?
             if(!defaultRegionOptions.containsKey(propName)){
                 sender.sendMessage("Unrecognized property.");
-                return false;
+                return true;
             }
-//            if(!config.isConfigurationSection(sectionName)){
+            if(!config.isConfigurationSection(sectionName)){
+                sender.sendMessage("Error: region does not exist");
 //                config.createSection(sectionName, defaultRegionOptions);
-//            }
+                return true;
+            }
             
             if(defaultRegionOptions.get(propName) instanceof Boolean){
                 config.set(sectionName+"."+propName, Boolean.parseBoolean(value));
@@ -356,7 +374,7 @@ public class mcDungeons extends JavaPlugin {
             }
             else{
                 sender.sendMessage("Failed to set "+args[1]+"'s property "+propName+" to "+value);
-                return false;
+                return true;
             }
             
             sender.sendMessage("Set "+args[1]+"'s property "+propName+" to "+value);
@@ -368,10 +386,6 @@ public class mcDungeons extends JavaPlugin {
             if(args.length != 2 && args.length != 1){
                 sender.sendMessage("Usage: /mcd region list [regionID]");
                 sender.sendMessage("Description: Lists all properties and values for a given region");
-                return false;
-            }
-            if(!sender.hasPermission("mcd.list")){
-                sender.sendMessage("Add failed: requires permission" + "mcd.list");
                 return false;
             }
             if(args.length == 1){
@@ -411,10 +425,6 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Description: Removes region from database.");
                 return false;
             }
-            if(!sender.hasPermission("mcd.remove")){
-                sender.sendMessage("Remove failed: requires permission" + "mcd.remove");
-                return false;
-            }
             String sectionName = "regions."+args[1];
             config.set(sectionName, null);
             configMgr.saveConfig();
@@ -425,10 +435,6 @@ public class mcDungeons extends JavaPlugin {
             if(args.length != 2){
                 sender.sendMessage("Usage: /mcd region reset <regionID>");
                 sender.sendMessage("Description: Resets region to default values.");
-                return false;
-            }
-            if(!sender.hasPermission("mcd.reset")){
-                sender.sendMessage("Reset failed: requires permission" + "mcd.reset");
                 return false;
             }
             String sectionName = "regions."+args[1];
@@ -455,7 +461,11 @@ public class mcDungeons extends JavaPlugin {
         if(args.length < 1){
             // display help
             sender.sendMessage("Usage: /mcd level [add|set|list|reset|remove]");
-            return false;
+            return true;
+        }
+        
+        if(!checkPermission(sender,"mcd.levels")){
+            return true;
         }
         
         String arg = args[0];
@@ -465,11 +475,6 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Usage: /mcd level add");
                 sender.sendMessage("Description: adds a new level");
                 sender.sendMessage("with default configuration values");
-                return false;
-            }
-
-            if(!sender.hasPermission("mcd.add")){
-                sender.sendMessage("Add failed: requires permission " + "mcd.add");
                 return false;
             }
 
@@ -499,10 +504,6 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Description: Sets level property values");
                 return false;
             }
-            if(!sender.hasPermission("mcd.set")){
-                sender.sendMessage("Set failed: requires permission " + "mcd.set");
-                return false;
-            }
             String sectionName = "levels."+args[1];
             String propName = args[2];
             String value = args[3];
@@ -528,10 +529,6 @@ public class mcDungeons extends JavaPlugin {
             if(args.length < 1){
                 sender.sendMessage("Usage: /mcd levels list [level num]");
                 sender.sendMessage("Description: Lists all levels or level properties");
-                return false;
-            }
-            if(!sender.hasPermission("mcd.list")){
-                sender.sendMessage("List failed: requires permission" + "mcd.list");
                 return false;
             }
 
@@ -563,39 +560,30 @@ public class mcDungeons extends JavaPlugin {
             return true;
         }
         else if(arg.equalsIgnoreCase("remove")){
-            if(args.length != 2){
-                sender.sendMessage("Usage: /mcd level remove [level number]");
-                sender.sendMessage("Description: Removes level from config.");
-                sender.sendMessage("Must be highest level.");
-                return false;
-            }
-            if(!sender.hasPermission("mcd.remove")){
-                sender.sendMessage("Remove failed: requires permission" + "mcd.remove");
+            if(args.length != 1){
+                sender.sendMessage("Usage: /mcd level remove");
+                sender.sendMessage("Description: Removes the highest level from config.");
                 return false;
             }
             // get the highest current level number
-            Set<String> levelNumbers = config.getKeys(false);
-            String max = Collections.max(levelNumbers);
-            if(max != args[1]){
-                sender.sendMessage("Error: can only remove level "+max);
-                return false;
+            ConfigurationSection levelsConfig = config.getConfigurationSection("levels");
+            if(levelsConfig != null){
+                Set<String> levelNumbers = levelsConfig.getKeys(false);
+                String max = Collections.max(levelNumbers);
+                
+                String sectionName = "levels." + max;
+                config.set(sectionName, null);
+                configMgr.saveConfig();
+                configMgr.reloadConfig();
+                sender.sendMessage("Removed level: " + max);
             }
             
-            String sectionName = "levels."+args[1];
-            config.set(sectionName, null);
-            configMgr.saveConfig();
-            configMgr.reloadConfig();
-            sender.sendMessage("Removed level: "+args[1]);
             return true;
         }
         else if(arg.equalsIgnoreCase("reset")){
             if(args.length != 2){
                 sender.sendMessage("Usage: /mcd reset <level number>");
                 sender.sendMessage("Description: Resets level config to default values.");
-                return false;
-            }
-            if(!sender.hasPermission("mcd.reset")){
-                sender.sendMessage("Reset failed: requires permission" + "mcd.reset");
                 return false;
             }
             String sectionName = "levels."+args[1];
@@ -607,4 +595,12 @@ public class mcDungeons extends JavaPlugin {
         return true;
     }
 	
+    private boolean checkPermission(CommandSender sender, String permission){
+        if(!sender.hasPermission(permission)){
+            sender.sendMessage("Command failed: requires permission " + permission);
+            return false;
+        }  
+        return true;
+    }
+    
 }

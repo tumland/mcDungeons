@@ -19,7 +19,7 @@ public class EntityRegistry {
     }
     
     public void add(Entity entity, ArrayList<String> regionNames){
-        if(!entityTable.containsKey(entity)){
+        if(!entityTable.containsKey(entity) && regionNames.size() > 0){
             entityTable.put(entity, regionNames);
         }
     }
@@ -35,5 +35,12 @@ public class EntityRegistry {
             return entityTable.get(entity);
         }
         return new ArrayList<String>();
+    }
+    
+    public boolean contains(Entity entity){
+        if( entityTable.containsKey(entity) ){
+            return true;
+        }
+        return false;
     }
 }

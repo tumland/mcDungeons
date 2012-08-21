@@ -2,13 +2,13 @@ name: mcDungeons
 main: com.coffeejawa.mcDungeons.mcDungeons
 version: 0.5
 authors: [tumland]
-description: Worldguard Difficult allows monster difficulty adjustment in Worldguard regions.
+description: mcDungeons allows servers to control difficulty of monsters on a region granularity. It also enables dungeon creation by placing blocks to represent different spawn types.
 
 softdepend: [ WorldGuard ]
 
 commands:
     mcd:
-        description: Root command for all  WorldguardDifficulty Commands.
+        description: Root command for all mcDungeons Commands.
         aliases: mcd
         usage: /mcd <region|level|debug> [add|set|list|reset|remove]
         permission: mcd.help
@@ -16,46 +16,31 @@ commands:
         
 permissions:
     mcd.*:
-        description: Gives access to all WorldguardDifficulty commands/functions.
+        description: Gives access to all mcDungeons commands/functions.
         default: op
         children:
-            mcd.add: true
             mcd.debug: true
             mcd.help: true
-            mcd.remove: true
-            mcd.set: true
-            mcd.list: true
-            mcd.reset: true
-            mcd.edit: true
+            mcd.regions: true
+            mcd.levels: true
+            mcd.dungeons: true
 
-    mcd.add:
-        description: Allows user to add region mappings.
+    mcd.regions:
+        description: Allows user to configure mcDungeons regions.
         default: false
         
-    mcd.set:
-        description: Allows user to overwrite settings.
+    mcd.levels:
+        description: Allows user to configure mcDungeons levels.
         default: false
         
-    mcd.list:
-        description: Allows user to list levels, regions and settings.
+    mcd.dungeons:
+        description: Allows user to configure mcDungeons dungeons.
         default: false
-        
-    mcd.remove:
-        description: Allow user to remove mapping for a region ID.
-        default: false
-        
-    mcd.reset:
-           description: Allow user to reset region to default settings.
-           default: false
-    
+            
     mcd.debug:
         description: Allows user to toggle debug on and off.
         default: false
 
     mcd.help:
         description: Allows user to view command help text.
-        default: false
-        
-    mcd.edit:
-        description: Allows use to edit dungeons.
         default: false

@@ -15,7 +15,7 @@ public class mcdCreeper extends net.minecraft.server.EntityCreeper{
     
     public mcdCreeper(World world) {
         super(world);
-        speed = this.bw;
+        speed = 1.0f;
     }
     
     public void d(){
@@ -25,7 +25,7 @@ public class mcdCreeper extends net.minecraft.server.EntityCreeper{
         Location to = new Location(creeper.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
         EntityCreature ec = ((CraftCreature)creeper).getHandle();
         Navigation nav = ec.getNavigation();
-          nav.a(this.speed);
+        nav.a(this.speed*0.25F);
           
         CreeperMoveEvent event = new CreeperMoveEvent(creeper, from, to, nav);
         if (!event.isCancelled() && !creeper.isDead()){

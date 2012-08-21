@@ -37,15 +37,23 @@ public class EntityHelper {
             return;
         }
         
+        WorldGuardHelper wgHelper = new WorldGuardHelper(plugin);
+        
         Location location = entity.getLocation();
         EntityType entityType = entity.getType();
- 
+        
+        if(!plugin.getEntityRegistry().contains(entity)){
+            plugin.getEntityRegistry().add(entity, wgHelper.locationInRegionsNamed(location));
+        }
+         
         net.minecraft.server.World mcWorld = ((CraftWorld) (location.getWorld())).getHandle();
         net.minecraft.server.Entity mcEntity = (((CraftEntity) entity).getHandle());
       
       if (entityType == EntityType.ZOMBIE && mcEntity instanceof mcdZombie == false){
         
           mcdZombie zombie = new mcdZombie(mcWorld);
+          
+          zombie.setSpeed((float) this.getMaxSpeedX(entity));
 
           zombie.setPosition(location.getX(), location.getY(), location.getZ());
           
@@ -57,6 +65,8 @@ public class EntityHelper {
       
       if (entityType == EntityType.CREEPER && mcEntity instanceof mcdCreeper == false){
           mcdCreeper creeper = new mcdCreeper(mcWorld);
+          
+          creeper.setSpeed((float) this.getMaxSpeedX(entity));
 
           creeper.setPosition(location.getX(), location.getY(), location.getZ());
           
@@ -69,6 +79,8 @@ public class EntityHelper {
       if (entityType == EntityType.SKELETON && mcEntity instanceof mcdSkeleton == false){
           mcdSkeleton skeleton = new mcdSkeleton(mcWorld);
 
+          skeleton.setSpeed((float) this.getMaxSpeedX(entity));
+          
           skeleton.setPosition(location.getX(), location.getY(), location.getZ());
           
           mcWorld.removeEntity((net.minecraft.server.EntitySkeleton) mcEntity);
@@ -79,6 +91,8 @@ public class EntityHelper {
       
       if (entityType == EntityType.SPIDER && mcEntity instanceof mcdSpider == false){
           mcdSpider spider = new mcdSpider(mcWorld);
+          
+          spider.setSpeed((float) this.getMaxSpeedX(entity));
 
           spider.setPosition(location.getX(), location.getY(), location.getZ());
           
@@ -89,9 +103,6 @@ public class EntityHelper {
       }
         
     }
-    
-    
-
     
     public double getMaxHealthX(Entity entity)
     {

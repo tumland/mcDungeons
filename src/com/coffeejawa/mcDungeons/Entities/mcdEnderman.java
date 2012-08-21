@@ -14,7 +14,7 @@ public class mcdEnderman extends net.minecraft.server.EntityEnderman{
     
     public mcdEnderman(World world) {
         super(world);
-        speed = this.bw;
+        speed = 1.0f;
     }
     
     public void d(){
@@ -24,7 +24,7 @@ public class mcdEnderman extends net.minecraft.server.EntityEnderman{
         Location to = new Location(enderman.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
         EntityCreature ec = ((CraftCreature)enderman).getHandle();
         Navigation nav = ec.getNavigation();
-          nav.a(this.speed);
+        nav.a(this.speed * 0.2f);
           
         EndermanMoveEvent event = new EndermanMoveEvent(enderman, from, to, nav);
         

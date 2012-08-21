@@ -14,7 +14,7 @@ public class mcdZombie extends net.minecraft.server.EntityZombie{
     
     public mcdZombie(World world) {
         super(world);
-        speed = this.bw;
+        speed = 1.0f;
     }
     
     public void d(){
@@ -24,7 +24,7 @@ public class mcdZombie extends net.minecraft.server.EntityZombie{
         Location to = new Location(zombie.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
         EntityCreature ec = ((CraftCreature)zombie).getHandle();
         Navigation nav = ec.getNavigation();
-          nav.a(this.speed);
+        nav.a(this.speed * 0.35f);
           
         ZombieMoveEvent event = new ZombieMoveEvent(zombie, from, to, nav);
         if (!event.isCancelled() && !zombie.isDead()){

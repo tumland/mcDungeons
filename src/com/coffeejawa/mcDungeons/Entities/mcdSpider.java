@@ -14,7 +14,7 @@ public class mcdSpider extends net.minecraft.server.EntitySpider{
     
     public mcdSpider(World world) {
         super(world);
-        speed = this.bw;
+        speed = 1.0f;
     }
     
     public void d(){
@@ -24,7 +24,7 @@ public class mcdSpider extends net.minecraft.server.EntitySpider{
         Location to = new Location(spider.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
         EntityCreature ec = ((CraftCreature)spider).getHandle();
         Navigation nav = ec.getNavigation();
-          nav.a(this.speed);
+        nav.a(this.speed * 0.8f);
           
         SpiderMoveEvent event = new SpiderMoveEvent(spider, from, to, nav);
         if (!event.isCancelled() && !spider.isDead()){

@@ -14,7 +14,7 @@ public class mcdSkeleton extends net.minecraft.server.EntitySkeleton{
     
     public mcdSkeleton(World world) {
         super(world);
-        speed = this.bw;
+        speed = 1.0f;
     }
     
     public void d(){
@@ -24,7 +24,7 @@ public class mcdSkeleton extends net.minecraft.server.EntitySkeleton{
         Location to = new Location(skeleton.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
         EntityCreature ec = ((CraftCreature)skeleton).getHandle();
         Navigation nav = ec.getNavigation();
-          nav.a(this.speed);
+          nav.a(this.speed * 0.25f);
           
         SkeletonMoveEvent event = new SkeletonMoveEvent(skeleton, from, to, nav);
         

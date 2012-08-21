@@ -2,7 +2,3 @@ regions:
     spawn:
         level: 1
         enableSpawnControl: true
-        spawnAmount: 10
-        spawnTriggerRegion: testTrigger
-        spawnTypeList: Spider, Zombie
-        spawnCooldown: 5 
