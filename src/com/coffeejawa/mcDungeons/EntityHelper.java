@@ -12,6 +12,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 
 import com.coffeejawa.mcDungeons.Entities.mcdCreeper;
+import com.coffeejawa.mcDungeons.Entities.mcdEnderman;
 import com.coffeejawa.mcDungeons.Entities.mcdSkeleton;
 import com.coffeejawa.mcDungeons.Entities.mcdSpider;
 import com.coffeejawa.mcDungeons.Entities.mcdZombie;
@@ -54,7 +55,8 @@ public class EntityHelper {
           mcdZombie zombie = new mcdZombie(mcWorld);
           
           zombie.setSpeed((float) this.getMaxSpeedX(entity));
-
+          zombie.setKnockback(this.getKnockback(entity));
+          
           zombie.setPosition(location.getX(), location.getY(), location.getZ());
           
           mcWorld.removeEntity((net.minecraft.server.EntityZombie) mcEntity);
@@ -67,9 +69,10 @@ public class EntityHelper {
           mcdCreeper creeper = new mcdCreeper(mcWorld);
           
           creeper.setSpeed((float) this.getMaxSpeedX(entity));
-
-          creeper.setPosition(location.getX(), location.getY(), location.getZ());
+          creeper.setKnockback(this.getKnockback(entity));
           
+          creeper.setPosition(location.getX(), location.getY(), location.getZ());
+
           mcWorld.removeEntity((net.minecraft.server.EntityCreeper) mcEntity);
           mcWorld.addEntity(creeper, SpawnReason.CUSTOM);
 
@@ -80,7 +83,8 @@ public class EntityHelper {
           mcdSkeleton skeleton = new mcdSkeleton(mcWorld);
 
           skeleton.setSpeed((float) this.getMaxSpeedX(entity));
-          
+          skeleton.setKnockback(this.getKnockback(entity));
+
           skeleton.setPosition(location.getX(), location.getY(), location.getZ());
           
           mcWorld.removeEntity((net.minecraft.server.EntitySkeleton) mcEntity);
@@ -93,11 +97,26 @@ public class EntityHelper {
           mcdSpider spider = new mcdSpider(mcWorld);
           
           spider.setSpeed((float) this.getMaxSpeedX(entity));
+          spider.setKnockback(this.getKnockback(entity));
 
           spider.setPosition(location.getX(), location.getY(), location.getZ());
           
           mcWorld.removeEntity((net.minecraft.server.EntitySpider) mcEntity);
           mcWorld.addEntity(spider, SpawnReason.CUSTOM);
+
+          return;
+      }
+      
+      if (entityType == EntityType.ENDERMAN && mcEntity instanceof mcdEnderman == false){
+          mcdEnderman enderman = new mcdEnderman(mcWorld);
+          
+          enderman.setSpeed((float) this.getMaxSpeedX(entity));
+          enderman.setKnockback(this.getKnockback(entity));
+
+          enderman.setPosition(location.getX(), location.getY(), location.getZ());
+          
+          mcWorld.removeEntity((net.minecraft.server.EntityEnderman) enderman);
+          mcWorld.addEntity(enderman, SpawnReason.CUSTOM);
 
           return;
       }
@@ -125,12 +144,44 @@ public class EntityHelper {
         return getMaxRegionDoubleAttribute(entity, "speedX");
     }
     
+    public boolean getKnockback(Entity entity)
+    {
+        if (plugin.worldguard == null || !plugin.bWorldGuardEnabled){
+            return true;
+        }
+
+        return getRegionBoolean(entity, "knockback");
+    }
+
     public double getMinActivationRange(Entity entity) { 
         if (plugin.worldguard == null || !plugin.bWorldGuardEnabled){
             return (Double) getWorldAttribute("activationRange");
         }
         
         return (Double) getMinRegionDoubleAttribute(entity, "activationRange");
+    }
+    
+    public boolean getRegionBoolean(Entity entity, String attributeName) {
+        if (plugin.worldguard == null || !plugin.bWorldGuardEnabled){
+            return true;
+        }
+        boolean attributeVal = (Boolean) getWorldAttribute(attributeName);
+        
+        ArrayList<String> regionNames = plugin.getEntityRegistry().getRegions(entity);
+        
+        for(String regionName : regionNames) {
+            // get region object
+            mcdRegion currRegion = plugin.getRegionConfigManager().getRegionByName(regionName);
+            if(currRegion != null){
+                // get region object's level
+                mcdLevel level = plugin.getLevelConfigManager().getLevelObject(currRegion.getLevel());
+                if(level != null){
+                	attributeVal = (Boolean)level.getSettings().get(attributeName);
+                }
+            }
+        }
+
+        return attributeVal;
     }
     
     public Object getWorldAttribute(String attributeName){
