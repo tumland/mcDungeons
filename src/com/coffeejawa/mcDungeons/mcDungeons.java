@@ -2,29 +2,39 @@ package com.coffeejawa.mcDungeons;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
-import org.bukkit.Location;
+import net.minecraft.server.Material;
+
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftEntity;
-import org.bukkit.entity.Entity;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.coffeejawa.mcDungeons.Level.LevelCommandHelper;
+import com.coffeejawa.mcDungeons.Entities.mcdCreeper;
+import com.coffeejawa.mcDungeons.Entities.mcdEnderman;
+import com.coffeejawa.mcDungeons.Entities.mcdSkeleton;
+import com.coffeejawa.mcDungeons.Entities.mcdSpider;
+import com.coffeejawa.mcDungeons.Entities.mcdZombie;
 import com.coffeejawa.mcDungeons.Level.LevelConfigMgr;
+import com.coffeejawa.mcDungeons.Listeners.BlockListener;
 import com.coffeejawa.mcDungeons.Listeners.DamageListener;
 import com.coffeejawa.mcDungeons.Listeners.MoveListener;
 import com.coffeejawa.mcDungeons.Listeners.SpawnListener;
-import com.coffeejawa.mcDungeons.Region.RegionCommandHelper;
 import com.coffeejawa.mcDungeons.Region.RegionConfigMgr;
-import com.coffeejawa.mcDungeons.Entities.*;
+import com.google.common.base.Joiner;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 public class mcDungeons extends JavaPlugin {
@@ -36,9 +46,24 @@ public class mcDungeons extends JavaPlugin {
 	
 	private RegionConfigMgr regionConfigManager;
 	private LevelConfigMgr levelConfigManager;
+	private DungeonConfigMgr dungeonConfigManager;
+	
+	private EditSessionManager editSessionManager;
 	
 	private EntityRegistry entityRegistry;
-	
+    private EntityHelper entityHelper;
+    
+
+    
+    public EntityRegistry getEntityRegistry() {
+        return entityRegistry;
+    }
+
+    public EntityHelper getEntityHelper() {
+        return entityHelper;
+    }
+
+		
 	@Override
 	public void onEnable() 
 	{
@@ -46,18 +71,37 @@ public class mcDungeons extends JavaPlugin {
 		
 		bWorldGuardEnabled = false;
 		
-		getConfiguration();
-		
+        this.reloadConfig();
+        
+        // check for worldguard
+        if(getConfig().getBoolean("useWorldGuard")){
+            if (getServer().getPluginManager().getPlugin("WorldGuard") == null)
+            {
+                getLogger().info("WorldGuard plugin not found");
+                bWorldGuardEnabled =  false;
+            }
+            worldguard = (WorldGuardPlugin) getServer().getPluginManager().getPlugin("WorldGuard");
+            if( worldguard != null )
+                bWorldGuardEnabled = true;
+        }
+        
+        if (bWorldGuardEnabled)
+            logger.info("[" + this.getDescription().getName() +  "] WorldGuard support enabled.");
+	
 		regionConfigManager = new RegionConfigMgr(this);
-		
 		levelConfigManager = new LevelConfigMgr(this);
+		editSessionManager = new EditSessionManager(this);
+		dungeonConfigManager = new DungeonConfigMgr(this);
 		
-		entityRegistry = new EntityRegistry(this);
+		entityRegistry = new EntityRegistry();
+		
+		entityHelper = new EntityHelper(this);
 		
 		this.logger.info(pdfFile.getName() + " v" + pdfFile.getVersion() + " Has Been Enabled!");
-        getServer().getPluginManager().registerEvents(new DamageListener(this,entityRegistry), this);
-        getServer().getPluginManager().registerEvents(new SpawnListener(this,entityRegistry), this);
-        getServer().getPluginManager().registerEvents(new MoveListener(this,entityRegistry), this);
+        getServer().getPluginManager().registerEvents(new DamageListener(this), this);
+        getServer().getPluginManager().registerEvents(new SpawnListener(this), this);
+        getServer().getPluginManager().registerEvents(new MoveListener(this), this);
+        getServer().getPluginManager().registerEvents(new BlockListener(this), this);
         
         try{
             Class<?>[] args = new Class[3];
@@ -73,63 +117,52 @@ public class mcDungeons extends JavaPlugin {
             a.invoke(a, mcdSkeleton.class, "Skeleton", 51);
             a.invoke(a, mcdSpider.class, "Spider", 52);
             a.invoke(a, mcdZombie.class, "Zombie", 54);
-//            a.invoke(a, BloodMoonEntityEnderman.class, "Enderman", 58);
+            a.invoke(a, mcdEnderman.class, "Enderman", 58);
         }catch (Exception e){
             e.printStackTrace();
-
             this.setEnabled(false);
             return;
         }
         
         List<World> worlds = this.getServer().getWorlds();
-        
         for( World world : worlds){
-            replaceCreatures(world);
+            entityHelper.replaceCreatures(world);
         }
+        
     }
 	
-	@Override
+	public DungeonConfigMgr getDungeonConfigManager() {
+	    return dungeonConfigManager;
+	}
+	
+	public EditSessionManager getEditSessionManager() {
+        return editSessionManager;
+    }
+
+    @Override
 	public void onDisable(){
 	    saveConfig();
 	    regionConfigManager.saveConfig();
 	    levelConfigManager.saveConfig();
+	    dungeonConfigManager.saveConfig();
 	       
         getLogger().info("mcDungeons has been disabled.");
+	}
 
-	}
-	
-	
-	public void getConfiguration()
-	{	
-		this.reloadConfig();
-		
-		if(getConfig().getBoolean("useWorldGuard")){
-			this.bWorldGuardEnabled = checkWorldGuard();
-		}
-		
-		if (this.bWorldGuardEnabled == true && worldguard != null)
-			logger.info("[" + this.getDescription().getName()
-					+ "] WorldGuard support enabled.");
-	}
-	public RegionConfigMgr getRegionConfigManager(){
-	    return this.regionConfigManager;
-	}
+    public RegionConfigMgr getRegionConfigManager(){
+        return this.regionConfigManager;
+    }
     public LevelConfigMgr getLevelConfigManager(){
         return this.levelConfigManager;
     }
+    
 
-    private boolean checkWorldGuard()
-	{
-		if (getServer().getPluginManager().getPlugin("WorldGuard") == null)
-		{
-			getLogger().info("WorldGuard plugin not found");
-			return false;
-		}
-		worldguard = (WorldGuardPlugin) getServer().getPluginManager().getPlugin("WorldGuard");
-		return true;
-	}
-	
-	
+    
+    public void triggerDungeonSpawns(String dungeonName){
+        getDungeonConfigManager().getDungeonByName(dungeonName).triggerSpawns();
+    }
+    
+    
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		String name = cmd.getName();
 		if (name.equalsIgnoreCase("mcd")){
@@ -142,13 +175,14 @@ public class mcDungeons extends JavaPlugin {
 				String arg = args[0];
 
 				if(arg.equalsIgnoreCase("level")){
-				    LevelCommandHelper helper = new LevelCommandHelper(this);
-				    helper.handleLevelCommand(sender, this, Arrays.copyOfRange(args, 1, args.length));
+				    handleLevelCommand(sender, Arrays.copyOfRange(args, 1, args.length));
 				}
 				else if(arg.equalsIgnoreCase("region")){
-                    RegionCommandHelper helper = new RegionCommandHelper();
-                    helper.handleRegionCommand(sender, this, Arrays.copyOfRange(args, 1, args.length));
+                    handleRegionCommand(sender, Arrays.copyOfRange(args, 1, args.length));
 				}
+//				else if(arg.equalsIgnoreCase("dungeon")){
+//				    handleDungeonCommand(sender, Arrays.copyOfRange(args, 1, args.length));
+//				}
 				else if(arg.equalsIgnoreCase("debug")){
 					if(getConfig().getBoolean("debug")){
 						getConfig().set("debug", false);
@@ -159,76 +193,409 @@ public class mcDungeons extends JavaPlugin {
 						sender.sendMessage("Toggled DEBUG mode to ON");
 					}
 				}
-				else{
-				    return false;
-				}
+
 			}
 	
 		}
 		return true;
 	}
 	
-	public void replaceCreatures(World world){
-	    List<Entity> entities = world.getEntities();
-	    for( Entity entity : entities){
-	        replaceCreature(entity);
-	    }
+	
+	private boolean handleDungeonCommand(CommandSender sender, String[] args){
+	    String arg = args[0];
+        if(arg.equalsIgnoreCase("edit")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd dungeon edit <creature type>");
+                sender.sendMessage("Description: Start editing dungeon.");
+                return true;
+            }
+            EntityType entityType = EntityType.fromName(args[1]);
+            
+            org.bukkit.Material type = ((Player) sender).getItemInHand().getType();
+            
+            if(!getEditSessionManager().startEditSession((Player) sender, type, entityType)){
+                // failed
+                sender.sendMessage("Failed to start editing. Try a different material.");
+            }
+            
+            sender.sendMessage("mcDungeons: entering edit mode. " + type.toString() + " blocks will spawn " + entityType.toString());
+        }
+        else if(arg.equalsIgnoreCase("finish")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd dungeon finish <dungeon name>");
+                sender.sendMessage("Description: Finish editing dungeon, save it under name provided.");
+                return true;
+            }    
+            getEditSessionManager().endEditSession((Player) sender, args[1]);
+        }
+        else if(arg.equalsIgnoreCase("remove")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd dungeon remove <dungeon name>");
+                sender.sendMessage("Description: Remove dungeon.");
+                return true;
+            }
+            String dungeonName = args[1];
+            
+            if(!getDungeonConfigManager().removeDungeon(dungeonName)){
+                sender.sendMessage("Failed to remove dungeon. Does it exist?");
+                return false;
+            }
+        }
+        else if(arg.equalsIgnoreCase("list")){
+            if(args.length != 1 && args.length != 2){
+                sender.sendMessage("Usage: /mcd dungeon list [dungeon name]");
+                sender.sendMessage("Description: List dungeon settings.");
+                return true;
+            }
+            
+            if(args.length == 1){
+                sender.sendMessage(getDungeonConfigManager().getDungeons().keySet().toString());
+            }
+            else{
+                String dungeonName = args[1];
+                sender.sendMessage(getDungeonConfigManager().getDungeonConfig(dungeonName).toString());
+            }
+            return true;  
+        }
+        
+        else{
+            return false;
+        }
+	    return true;
 	}
-	public void replaceCreature(Entity entity){
-	    if(entity.isDead()){
-	        return;
-	    }
-	    
-        Location location = entity.getLocation();
-        EntityType entityType = entity.getType();
- 
-        net.minecraft.server.World mcWorld = ((CraftWorld) (location.getWorld())).getHandle();
-        net.minecraft.server.Entity mcEntity = (((CraftEntity) entity).getHandle());
-      
-      if (entityType == EntityType.ZOMBIE && mcEntity instanceof mcdZombie == false){
-          mcdZombie zombie = new mcdZombie(mcWorld);
+	
+    
+    private boolean handleRegionCommand(CommandSender sender, String[] args){
+        HashMap<String,Object> defaultRegionOptions;
+        defaultRegionOptions = new HashMap<String,Object>();
+        
+        defaultRegionOptions.put("level", 1);
+        defaultRegionOptions.put("enableSpawnControl", false);
+                       
+        RegionConfigMgr configMgr = getRegionConfigManager();
+        ConfigurationSection config = getRegionConfigManager().getConfig();
+        
+        if(args.length < 1){
+            // display help
+            sender.sendMessage("Usage: /mcd region [add|set|list|reset|remove]");
+            return false;
+        }
+        
+        String arg = args[0];
+        if (arg.equalsIgnoreCase("add") )
+        {
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd region add <regionID>");
+                sender.sendMessage("Description: adds region to regions config");
+                sender.sendMessage("with default values. Must be same as worldguard id.");
+                return false;
+            }
 
-          zombie.setPosition(location.getX(), location.getY(), location.getZ());
-          
-          mcWorld.removeEntity((net.minecraft.server.EntityZombie) mcEntity);
-          mcWorld.addEntity(zombie, SpawnReason.CUSTOM);
+            if(!sender.hasPermission("mcd.add")){
+                sender.sendMessage("Add failed: requires permission" + "mcd.add");
+                return false;
+            }
 
-          return;
-      }
-      
-      if (entityType == EntityType.CREEPER && mcEntity instanceof mcdCreeper == false){
-          mcdCreeper creeper = new mcdCreeper(mcWorld);
+            // make sure the region exists in worldguard
+            WorldGuardHelper wgHelper = new WorldGuardHelper(this);
+            if(!wgHelper.isRegionAnyWorld(args[1])){
+                sender.sendMessage("Add failed: Add region in WorldGuard first!");
+                return true;
+            }
+            for( World world : getServer().getWorlds() ){
+                String regionType = wgHelper.getRegionType(args[1],world);
+                if(!regionType.equalsIgnoreCase("cuboid"))
+                    sender.sendMessage("Region add failed: unsupported region type");
+            }
+             
+            // add new region define
+            String sectionName = "regions."+args[1];
+            // set up defaults
+            if(!config.isConfigurationSection(sectionName)){
+                config.createSection(sectionName, defaultRegionOptions);
+                configMgr.saveConfig();
+                configMgr.reloadConfig();
+                sender.sendMessage("Region "+args[1]+" added");
+            }
+            else{
+                sender.sendMessage("Error: region already exists in config.");
+                return false;
+            }
+        }
+        else if (arg.equalsIgnoreCase("set")){
+            if(args.length != 4){
+                sender.sendMessage("Usage: /mcd set <regionID> <property name> <value>");
+                sender.sendMessage("Description: Sets region property values");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.set")){
+                sender.sendMessage("Add failed: requires permission" + "mcd.set");
+                return false;
+            }
+            String sectionName = "regions."+args[1];
+            String propName = args[2];
+            String value = args[3];
+            
+            // Is the property Name in list of known args?
+            if(!defaultRegionOptions.containsKey(propName)){
+                sender.sendMessage("Unrecognized property.");
+                return false;
+            }
+            if(!config.isConfigurationSection(sectionName)){
+                config.createSection(sectionName, defaultRegionOptions);
+            }
+            
+            if(defaultRegionOptions.get(propName) instanceof Boolean){
+                config.set(sectionName+"."+propName, Boolean.parseBoolean(value));
+            }
+            else if(defaultRegionOptions.get(propName) instanceof Double){
+                config.set(sectionName+"."+propName, Double.parseDouble(value));
+            }
+            
+            sender.sendMessage("Set "+args[1]+"'s property "+propName+" to "+value);
+            
+            configMgr.saveConfig();
+            return true;
+        }   
+        else if (arg.equalsIgnoreCase("list")){
+            if(args.length != 2 && args.length != 1){
+                sender.sendMessage("Usage: /mcd region list [regionID]");
+                sender.sendMessage("Description: Lists all properties and values for a given region");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.list")){
+                sender.sendMessage("Add failed: requires permission" + "mcd.list");
+                return false;
+            }
+            if(args.length == 1){
+                ConfigurationSection regionsSection = config.getConfigurationSection("regions");
+                if(regionsSection == null){
+                    sender.sendMessage("Error: Regions section missing from regions.yml");
+                    return false;
+                }
 
-          creeper.setPosition(location.getX(), location.getY(), location.getZ());
-          
-          mcWorld.removeEntity((net.minecraft.server.EntityCreeper) mcEntity);
-          mcWorld.addEntity(creeper, SpawnReason.CUSTOM);
+                Set<String> sections = regionsSection.getKeys(false);
+                String msgString = "Configured regions: ";
+                msgString += StringUtils.join(sections,", ");
+                sender.sendMessage(msgString);
+                return true;
+            }
 
-          return;
-      }
-      
-      if (entityType == EntityType.SKELETON && mcEntity instanceof mcdSkeleton == false){
-          mcdSkeleton skeleton = new mcdSkeleton(mcWorld);
+            sender.sendMessage("List of properties for region "+args[1]+":");
+            String sectionName = "regions."+args[1];
+            ConfigurationSection section = config.getConfigurationSection(sectionName);
+            
+            Map<String,Object> values = section.getValues(false);
+            Iterator<Map.Entry<String, Object>> it = values.entrySet().iterator();
 
-          skeleton.setPosition(location.getX(), location.getY(), location.getZ());
-          
-          mcWorld.removeEntity((net.minecraft.server.EntitySkeleton) mcEntity);
-          mcWorld.addEntity(skeleton, SpawnReason.CUSTOM);
+            sender.sendMessage("Region "+args[1]+" properties: ");
+            while (it.hasNext()){
+                Map.Entry<String, Object> pairs = it.next();
+                sender.sendMessage(pairs.getKey()+" : "+pairs.getValue().toString());
+                it.remove();
+            }
+            return true;
+        }
+        else if(arg.equalsIgnoreCase("remove")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd region remove <regionID>");
+                sender.sendMessage("Description: Removes region from database.");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.remove")){
+                sender.sendMessage("Remove failed: requires permission" + "mcd.remove");
+                return false;
+            }
+            String sectionName = "regions."+args[1];
+            config.set(sectionName, null);
+            configMgr.saveConfig();
+            configMgr.reloadConfig();
+            return true;
+        }
+        else if(arg.equalsIgnoreCase("reset")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd region reset <regionID>");
+                sender.sendMessage("Description: Resets region to default values.");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.reset")){
+                sender.sendMessage("Reset failed: requires permission" + "mcd.reset");
+                return false;
+            }
+            String sectionName = "regions."+args[1];
+            config.createSection(sectionName, defaultRegionOptions);
+            sender.sendMessage("Region "+args[1]+" configuration reset to default options");
+            return true;
+        }
+        return true;
+    }
 
-          return;
-      }
-      
-      if (entityType == EntityType.SPIDER && mcEntity instanceof mcdSpider == false){
-          mcdSpider spider = new mcdSpider(mcWorld);
+    private boolean handleLevelCommand(CommandSender sender, String[] args){
+        
+        HashMap<String,Object> defaultOptions;
+        defaultOptions = new HashMap<String,Object>();
+        
+        defaultOptions.put("damageX", 1.0);
+        defaultOptions.put("healthX", 1.0);
+        defaultOptions.put("speedX", 0.1);
+        defaultOptions.put("activationRange", 20.0);
+        
+        LevelConfigMgr configMgr = getLevelConfigManager();
+        ConfigurationSection config = configMgr.getConfig();
+        
+        if(args.length < 1){
+            // display help
+            sender.sendMessage("Usage: /mcd level [add|set|list|reset|remove]");
+            return false;
+        }
+        
+        String arg = args[0];
+        if (arg.equalsIgnoreCase("add") )
+        {
+            if(args.length != 1){
+                sender.sendMessage("Usage: /mcd level add");
+                sender.sendMessage("Description: adds a new level");
+                sender.sendMessage("with default configuration values");
+                return false;
+            }
 
-          spider.setPosition(location.getX(), location.getY(), location.getZ());
-          
-          mcWorld.removeEntity((net.minecraft.server.EntitySpider) mcEntity);
-          mcWorld.addEntity(spider, SpawnReason.CUSTOM);
+            if(!sender.hasPermission("mcd.add")){
+                sender.sendMessage("Add failed: requires permission " + "mcd.add");
+                return false;
+            }
 
-          return;
-      }
-	    
-	}
+            // get the highest current level number
+            Set<String> levelNumbers = config.getConfigurationSection("levels").getKeys(false);
+            String max = Collections.max(levelNumbers);
+            int newMax = Integer.parseInt(max)+1;
+            String strNewMax = Integer.toString(newMax);
+            String sectionName = "levels."+strNewMax;
+            
+            // set up defaults
+            if(!config.isConfigurationSection(sectionName)){
+                config.createSection(sectionName, defaultOptions);
+                configMgr.saveConfig();
+                configMgr.reloadConfig();
+                sender.sendMessage("Level "+strNewMax+" added");
+            }
+            else{
+                // shouldn't be here.
+                sender.sendMessage("Error: level already exists. ");
+                return false;
+            }
+        }
+        else if (arg.equalsIgnoreCase("set")){
+            if(args.length != 4){
+                sender.sendMessage("Usage: /mcd level set <number> <property> <value> ");
+                sender.sendMessage("Description: Sets level property values");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.set")){
+                sender.sendMessage("Set failed: requires permission " + "mcd.set");
+                return false;
+            }
+            String sectionName = "levels."+args[1];
+            String propName = args[2];
+            String value = args[3];
+
+            sender.sendMessage("Warning: only double types currently allowed for property values.");
+
+            // Is the property Name in list of known args?
+            if(!defaultOptions.containsKey(propName)){
+                sender.sendMessage("Unrecognized property.");
+                return false;
+            }
+
+            if(!config.isConfigurationSection(sectionName)){
+                config.createSection(sectionName, defaultOptions);
+            }
+            config.set(sectionName+"."+propName, Double.parseDouble(value));
+            sender.sendMessage("Set "+args[1]+"'s property "+propName+" to "+value);
+
+            configMgr.saveConfig();
+            return true;
+        }   
+        else if (arg.equalsIgnoreCase("list")){
+            if(args.length < 1){
+                sender.sendMessage("Usage: /mcd levels list [level num]");
+                sender.sendMessage("Description: Lists all levels or level properties");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.list")){
+                sender.sendMessage("List failed: requires permission" + "mcd.list");
+                return false;
+            }
+
+
+            ConfigurationSection levelsSection = config.getConfigurationSection("levels");
+            if(levelsSection == null){
+                sender.sendMessage("Error: Levels section missing from levels.yml");
+                return false;
+            }
+
+            if(args.length == 1){
+                // list all levels
+                Set<String> levelsNumbers = config.getConfigurationSection("levels").getKeys(false);
+                sender.sendMessage(Joiner.on(", ").join(levelsNumbers));
+            }
+            else if(args.length == 2){
+                String strLevelNum = args[1];
+                sender.sendMessage(String.format("List of properties for level %s:",strLevelNum));
+                Map<String,Object> levelSettings = config.getConfigurationSection("levels."+strLevelNum).getValues(false);
+                for( String settingName : levelSettings.keySet()){
+                    sender.sendMessage(settingName + " : " + levelSettings.get(settingName).toString());
+                }
+            }
+            else{
+                // error
+                sender.sendMessage("Something has gone very wrong");
+                return false;
+            }
+            return true;
+        }
+        else if(arg.equalsIgnoreCase("remove")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd level remove [level number]");
+                sender.sendMessage("Description: Removes level from config.");
+                sender.sendMessage("Must be highest level.");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.remove")){
+                sender.sendMessage("Remove failed: requires permission" + "mcd.remove");
+                return false;
+            }
+            // get the highest current level number
+            Set<String> levelNumbers = config.getKeys(false);
+            String max = Collections.max(levelNumbers);
+            if(max != args[1]){
+                sender.sendMessage("Error: can only remove level "+max);
+                return false;
+            }
+            
+            String sectionName = "levels."+args[1];
+            config.set(sectionName, null);
+            configMgr.saveConfig();
+            configMgr.reloadConfig();
+            sender.sendMessage("Removed level: "+args[1]);
+            return true;
+        }
+        else if(arg.equalsIgnoreCase("reset")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd reset <level number>");
+                sender.sendMessage("Description: Resets level config to default values.");
+                return false;
+            }
+            if(!sender.hasPermission("mcd.reset")){
+                sender.sendMessage("Reset failed: requires permission" + "mcd.reset");
+                return false;
+            }
+            String sectionName = "levels."+args[1];
+            config.createSection(sectionName, defaultOptions);
+            sender.sendMessage("Level "+args[1]+" configuration reset to default options");
+            return true;
+        }
+
+        return true;
+    }
 	
 }

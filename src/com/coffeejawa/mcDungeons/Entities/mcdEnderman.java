@@ -6,28 +6,29 @@ import net.minecraft.server.World;
 
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftCreature;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.Enderman;
 
-public class mcdZombie extends net.minecraft.server.EntityZombie{
+public class mcdEnderman extends net.minecraft.server.EntityEnderman{
 
     private float speed;
     
-    public mcdZombie(World world) {
+    public mcdEnderman(World world) {
         super(world);
         speed = 0.1f;
     }
     
     public void d(){
-        Zombie zombie = (Zombie) this.getBukkitEntity();
-               
-        Location from = new Location(zombie.getWorld(), this.lastX, this.lastY, this.lastZ, this.lastYaw, this.lastPitch);
-        Location to = new Location(zombie.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
-        EntityCreature ec = ((CraftCreature)zombie).getHandle();
+        Enderman enderman = (Enderman) this.getBukkitEntity();
+       
+        Location from = new Location(enderman.getWorld(), this.lastX, this.lastY, this.lastZ, this.lastYaw, this.lastPitch);
+        Location to = new Location(enderman.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
+        EntityCreature ec = ((CraftCreature)enderman).getHandle();
         Navigation nav = ec.getNavigation();
           nav.a(this.speed);
           
-        ZombieMoveEvent event = new ZombieMoveEvent(zombie, from, to, nav);
-        if (!event.isCancelled() && !zombie.isDead()){
+        EndermanMoveEvent event = new EndermanMoveEvent(enderman, from, to, nav);
+        
+        if (!event.isCancelled() && !enderman.isDead()){
             this.world.getServer().getPluginManager().callEvent(event);
         }
         
@@ -41,7 +42,6 @@ public class mcdZombie extends net.minecraft.server.EntityZombie{
     public void setSpeed(float speed) {
         this.speed = speed;
     }
-    
     
     
 }

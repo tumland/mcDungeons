@@ -15,17 +15,14 @@ import com.coffeejawa.mcDungeons.mcDungeons;
 
 public class DamageListener implements Listener 
 {
-	private final mcDungeons _plugin;
+	private final mcDungeons plugin;
 	private WorldGuardHelper wgHelper;
     
-    private EntityRegistry entityRegistry;	
-	
-	public DamageListener(mcDungeons plugin, EntityRegistry entityRegistry) {
+	public DamageListener(mcDungeons plugin) {
 		super();
 
-		_plugin = plugin;
+		this.plugin = plugin;
 		wgHelper = new WorldGuardHelper(plugin);
-		this.entityRegistry = entityRegistry;
 	}
     
 	@EventHandler
@@ -53,13 +50,13 @@ public class DamageListener implements Listener
 			    return;
 			}
 						
-			double healthFactor = entityRegistry.getMaxHealthX(event.getEntity());
+			double healthFactor = plugin.getEntityHelper().getMaxHealthX(event.getEntity());
 			double damage = Math.ceil(event.getDamage() / healthFactor);
 						
-			if(_plugin.getConfig().getBoolean("debug")){
-				_plugin.logger.info(String.format("YOU DAMAGED AN ENTITY: AMT %d", event.getDamage()));	
-				_plugin.logger.info(String.format("maxMobHealthMult %f", healthFactor));
-				_plugin.logger.info(String.format("Adjusted Damage: AMT %f", damage));
+			if(plugin.getConfig().getBoolean("debug")){
+				plugin.logger.info(String.format("YOU DAMAGED AN ENTITY: AMT %d", event.getDamage()));	
+				plugin.logger.info(String.format("maxMobHealthMult %f", healthFactor));
+				plugin.logger.info(String.format("Adjusted Damage: AMT %f", damage));
 				playerDamager.sendMessage(String.format("Adjusted Damage: AMT %f", damage));
 			}
 			
@@ -87,17 +84,17 @@ public class DamageListener implements Listener
 	            return;
 	        }
 		    
-		    double damageFactor = entityRegistry.getMaxDamageX(damager);
+		    double damageFactor = plugin.getEntityHelper().getMaxDamageX(damager);
 		    
-			if(_plugin.getConfig().getBoolean("debug")){
-				_plugin.logger.info(String.format("you were hit by an entity: amt %d", event.getDamage()));	
-				_plugin.logger.info(String.format("mobDifficultyLevel %f", damageFactor));
+			if(plugin.getConfig().getBoolean("debug")){
+				plugin.logger.info(String.format("you were hit by an entity: amt %d", event.getDamage()));	
+				plugin.logger.info(String.format("mobDifficultyLevel %f", damageFactor));
 			}
 			
 			double damage = Math.ceil(event.getDamage() * damageFactor);
 						
-			if(_plugin.getConfig().getBoolean("debug")){
-				_plugin.logger.info(String.format("Adjusted Damage: AMT %f", damage));
+			if(plugin.getConfig().getBoolean("debug")){
+				plugin.logger.info(String.format("Adjusted Damage: AMT %f", damage));
 				player.sendMessage(String.format("Adjusted Damage: AMT %f", damage));
 			}
 			
@@ -112,8 +109,8 @@ public class DamageListener implements Listener
 //	    ArrayList<String> regionNames = entityRegistry.getRegions(entity);
 //	    int maxLevel = 0;
 //	    for(String regionName : regionNames) {
-//	        mcdRegion currRegion = _plugin.getRegionConfigManager().getRegionByName(regionName);
-//	        mcdLevel level = _plugin.getLevelsConfigManager().getLevelObject(currRegion.getLevel());
+//	        mcdRegion currRegion = plugin.getRegionConfigManager().getRegionByName(regionName);
+//	        mcdLevel level = plugin.getLevelsConfigManager().getLevelObject(currRegion.getLevel());
 //	        int levelNo = level.getNumber();
 //	        if(levelNo > maxLevel){
 //	            maxLevel = levelNo;

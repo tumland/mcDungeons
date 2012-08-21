@@ -26,6 +26,7 @@ permissions:
             mcd.set: true
             mcd.list: true
             mcd.reset: true
+            mcd.edit: true
 
     mcd.add:
         description: Allows user to add region mappings.
@@ -53,4 +54,8 @@ permissions:
 
     mcd.help:
         description: Allows user to view command help text.
+        default: false
+        
+    mcd.edit:
+        description: Allows use to edit dungeons.
         default: false

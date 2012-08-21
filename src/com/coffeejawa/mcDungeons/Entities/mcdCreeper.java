@@ -6,28 +6,29 @@ import net.minecraft.server.World;
 
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftCreature;
-import org.bukkit.entity.Zombie;
+import org.bukkit.entity.Creeper;
+import com.coffeejawa.mcDungeons.Entities.CreeperMoveEvent;
 
-public class mcdZombie extends net.minecraft.server.EntityZombie{
+public class mcdCreeper extends net.minecraft.server.EntityCreeper{
 
     private float speed;
     
-    public mcdZombie(World world) {
+    public mcdCreeper(World world) {
         super(world);
         speed = 0.1f;
     }
     
     public void d(){
-        Zombie zombie = (Zombie) this.getBukkitEntity();
-               
-        Location from = new Location(zombie.getWorld(), this.lastX, this.lastY, this.lastZ, this.lastYaw, this.lastPitch);
-        Location to = new Location(zombie.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
-        EntityCreature ec = ((CraftCreature)zombie).getHandle();
+        Creeper creeper = (Creeper) this.getBukkitEntity();
+       
+        Location from = new Location(creeper.getWorld(), this.lastX, this.lastY, this.lastZ, this.lastYaw, this.lastPitch);
+        Location to = new Location(creeper.getWorld(), this.locX, this.locY, this.locZ, this.yaw, this.pitch);
+        EntityCreature ec = ((CraftCreature)creeper).getHandle();
         Navigation nav = ec.getNavigation();
           nav.a(this.speed);
           
-        ZombieMoveEvent event = new ZombieMoveEvent(zombie, from, to, nav);
-        if (!event.isCancelled() && !zombie.isDead()){
+        CreeperMoveEvent event = new CreeperMoveEvent(creeper, from, to, nav);
+        if (!event.isCancelled() && !creeper.isDead()){
             this.world.getServer().getPluginManager().callEvent(event);
         }
         
@@ -41,7 +42,6 @@ public class mcdZombie extends net.minecraft.server.EntityZombie{
     public void setSpeed(float speed) {
         this.speed = speed;
     }
-    
     
     
 }
