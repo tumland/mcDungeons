@@ -10,6 +10,7 @@ public class mcdLevel {
     private double healthX;
     private double speedX;
     private double activationRange;
+    private boolean knockback;
     
     //TODO: implement later if this granularity is needed
 //    private double zombieDamageMultiplier;
@@ -21,12 +22,13 @@ public class mcdLevel {
 //    private double skeletonDamageMultiplier;
 //    private double skeletonHealthMultiplier;
     
-    mcdLevel(int number, double damageX, double healthX, double speedX, double activationRange){
+    mcdLevel(int number, double damageX, double healthX, double speedX, double activationRange, boolean knockback){
         this.damageX = damageX;
         this.healthX = healthX;
         this.speedX = speedX;
         this.activationRange = activationRange;
         this.number = number;
+        this.knockback = knockback;
     }
     
     public int getNumber() {
@@ -43,6 +45,7 @@ public class mcdLevel {
         tempMap.put("healthX", getHealthX());
         tempMap.put("speedX", getSpeedX());
         tempMap.put("activationRange", getActivationRange());
+        tempMap.put("knockback", getKnockback());
         return tempMap;
     }
     
@@ -77,6 +80,14 @@ public class mcdLevel {
 
     public void setActivationRange(double activationRange) {
         this.activationRange = activationRange;
+    }
+
+    public boolean getKnockback() {
+        return knockback;
+    }
+
+    public void setKnockback(boolean knockback) {
+        this.knockback = knockback;
     }
 
     /*
