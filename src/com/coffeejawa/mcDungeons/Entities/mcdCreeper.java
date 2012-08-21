@@ -15,7 +15,7 @@ public class mcdCreeper extends net.minecraft.server.EntityCreeper{
     
     public mcdCreeper(World world) {
         super(world);
-        speed = 0.1f;
+        speed = this.bw;
     }
     
     public void d(){

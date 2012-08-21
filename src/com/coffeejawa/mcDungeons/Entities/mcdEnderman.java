@@ -14,7 +14,7 @@ public class mcdEnderman extends net.minecraft.server.EntityEnderman{
     
     public mcdEnderman(World world) {
         super(world);
-        speed = 0.1f;
+        speed = this.bw;
     }
     
     public void d(){

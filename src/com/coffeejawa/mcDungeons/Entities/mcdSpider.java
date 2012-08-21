@@ -14,7 +14,7 @@ public class mcdSpider extends net.minecraft.server.EntitySpider{
     
     public mcdSpider(World world) {
         super(world);
-        speed = 0.1f;
+        speed = this.bw;
     }
     
     public void d(){

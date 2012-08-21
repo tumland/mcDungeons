@@ -14,7 +14,7 @@ public class mcdSkeleton extends net.minecraft.server.EntitySkeleton{
     
     public mcdSkeleton(World world) {
         super(world);
-        speed = 0.1f;
+        speed = this.bw;
     }
     
     public void d(){

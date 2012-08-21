@@ -14,7 +14,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import com.coffeejawa.mcDungeons.EntityHelper;
-import com.coffeejawa.mcDungeons.EntityRegistry;
 import com.coffeejawa.mcDungeons.mcDungeons;
 import com.coffeejawa.mcDungeons.Entities.CreeperMoveEvent;
 import com.coffeejawa.mcDungeons.Entities.SkeletonMoveEvent;
@@ -48,6 +47,7 @@ public class MoveListener implements Listener {
             if(player.getLocation().distance(zombie.getLocation()) < zombieActivationRange){
                 // set zombie speed
                 EntityCreature ec = ((CraftCreature)zombie).getHandle();
+                
                 Navigation nav = ec.getNavigation();
                   nav.a((float)zombieSpeed);
 

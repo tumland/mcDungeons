@@ -341,15 +341,22 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Unrecognized property.");
                 return false;
             }
-            if(!config.isConfigurationSection(sectionName)){
-                config.createSection(sectionName, defaultRegionOptions);
-            }
+//            if(!config.isConfigurationSection(sectionName)){
+//                config.createSection(sectionName, defaultRegionOptions);
+//            }
             
             if(defaultRegionOptions.get(propName) instanceof Boolean){
                 config.set(sectionName+"."+propName, Boolean.parseBoolean(value));
             }
             else if(defaultRegionOptions.get(propName) instanceof Double){
                 config.set(sectionName+"."+propName, Double.parseDouble(value));
+            }
+            else if(defaultRegionOptions.get(propName) instanceof Integer){
+                config.set(sectionName+"."+propName, Integer.parseInt(value));
+            }
+            else{
+                sender.sendMessage("Failed to set "+args[1]+"'s property "+propName+" to "+value);
+                return false;
             }
             
             sender.sendMessage("Set "+args[1]+"'s property "+propName+" to "+value);
@@ -385,14 +392,16 @@ public class mcDungeons extends JavaPlugin {
             String sectionName = "regions."+args[1];
             ConfigurationSection section = config.getConfigurationSection(sectionName);
             
-            Map<String,Object> values = section.getValues(false);
-            Iterator<Map.Entry<String, Object>> it = values.entrySet().iterator();
+            if( section == null ){
+                sender.sendMessage("Error: region not present");
+                return true;
+            }
+            
+            Set<String> keys = section.getKeys(false);
 
             sender.sendMessage("Region "+args[1]+" properties: ");
-            while (it.hasNext()){
-                Map.Entry<String, Object> pairs = it.next();
-                sender.sendMessage(pairs.getKey()+" : "+pairs.getValue().toString());
-                it.remove();
+            for( String key : keys ){
+                sender.sendMessage(key+" : "+section.get(key));
             }
             return true;
         }

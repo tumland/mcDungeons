@@ -14,7 +14,7 @@ public class mcdZombie extends net.minecraft.server.EntityZombie{
     
     public mcdZombie(World world) {
         super(world);
-        speed = 0.1f;
+        speed = this.bw;
     }
     
     public void d(){
