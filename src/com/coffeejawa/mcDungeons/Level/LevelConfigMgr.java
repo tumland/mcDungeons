@@ -91,7 +91,8 @@ public class LevelConfigMgr {
             levels.put(Integer.parseInt(levelName),new mcdLevel(Integer.parseInt(levelName),settings.getDouble("damageX"),
                     settings.getDouble("healthX"),
                     settings.getDouble("speedX"),
-                    settings.getDouble("activationRange")));
+                    settings.getDouble("activationRange"),
+                    settings.getBoolean("knockback")));
         }
         
     }
