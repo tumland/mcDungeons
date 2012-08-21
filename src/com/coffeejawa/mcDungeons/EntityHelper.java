@@ -12,6 +12,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 
 import com.coffeejawa.mcDungeons.Entities.mcdCreeper;
+import com.coffeejawa.mcDungeons.Entities.mcdEnderman;
 import com.coffeejawa.mcDungeons.Entities.mcdSkeleton;
 import com.coffeejawa.mcDungeons.Entities.mcdSpider;
 import com.coffeejawa.mcDungeons.Entities.mcdZombie;
@@ -102,6 +103,20 @@ public class EntityHelper {
           
           mcWorld.removeEntity((net.minecraft.server.EntitySpider) mcEntity);
           mcWorld.addEntity(spider, SpawnReason.CUSTOM);
+
+          return;
+      }
+      
+      if (entityType == EntityType.ENDERMAN && mcEntity instanceof mcdEnderman == false){
+          mcdEnderman enderman = new mcdEnderman(mcWorld);
+          
+          enderman.setSpeed((float) this.getMaxSpeedX(entity));
+          enderman.setKnockback(this.getKnockback(entity));
+
+          enderman.setPosition(location.getX(), location.getY(), location.getZ());
+          
+          mcWorld.removeEntity((net.minecraft.server.EntityEnderman) enderman);
+          mcWorld.addEntity(enderman, SpawnReason.CUSTOM);
 
           return;
       }
