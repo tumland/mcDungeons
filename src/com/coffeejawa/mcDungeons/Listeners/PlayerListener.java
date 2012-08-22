@@ -1,13 +1,11 @@
 package com.coffeejawa.mcDungeons.Listeners;
 
-import java.util.List;
-
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import com.coffeejawa.mcDungeons.*;
-import com.coffeejawa.mcDungeons.Region.mcdRegion;
+import com.coffeejawa.mcDungeons.EntityRegistry;
+import com.coffeejawa.mcDungeons.mcDungeons;
 
 public class PlayerListener implements Listener {
     
@@ -27,8 +25,8 @@ public class PlayerListener implements Listener {
         //List<Dungeon> dungeons = plugin.getDungeons();
         
         // get player regions
-        WorldGuardHelper wgHelper = new WorldGuardHelper(plugin);
-        List<String> regions = wgHelper.locationInRegionsNamed(event.getPlayer().getLocation());
+        //WorldGuardHelper wgHelper = new WorldGuardHelper(plugin);
+        //List<String> regions = wgHelper.locationInRegionsNamed(event.getPlayer().getLocation());
         
 //        List<Dungeon> dungeons = plugin.getDungeons();
 //        

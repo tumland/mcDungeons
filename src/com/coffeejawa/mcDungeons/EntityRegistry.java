@@ -2,13 +2,8 @@ package com.coffeejawa.mcDungeons;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import org.bukkit.World;
 import org.bukkit.entity.Entity;
-
-import com.coffeejawa.mcDungeons.Level.mcdLevel;
-import com.coffeejawa.mcDungeons.Region.mcdRegion;
 
 public class EntityRegistry {
     

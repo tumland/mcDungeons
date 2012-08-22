@@ -1,18 +1,11 @@
 package com.coffeejawa.mcDungeons;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemorySection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
-
-import com.coffeejawa.mcDungeons.Region.mcdRegion;
 
 public class Dungeon {
     private mcDungeons plugin;
@@ -23,7 +16,7 @@ public class Dungeon {
     public Dungeon(mcDungeons plugin, String name){
         this.plugin = plugin;
         this.name = name;
-        this.entities = new HashSet();
+        this.entities = new HashSet<LivingEntity>();
         spawners = new HashSet<PointSpawner>();
     }
     
@@ -35,7 +28,7 @@ public class Dungeon {
         for( String key : keys ){
             spawners.add(new PointSpawner(map.getConfigurationSection("spawners."+key)));
         }
-        this.entities = new HashSet();
+        this.entities = new HashSet<LivingEntity>();
     }
     
     public HashMap<String,Object> serialize(){

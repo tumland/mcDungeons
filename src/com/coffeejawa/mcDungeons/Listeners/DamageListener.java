@@ -9,20 +9,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-import com.coffeejawa.mcDungeons.EntityRegistry;
-import com.coffeejawa.mcDungeons.WorldGuardHelper;
 import com.coffeejawa.mcDungeons.mcDungeons;
 
 public class DamageListener implements Listener 
 {
 	private final mcDungeons plugin;
-	private WorldGuardHelper wgHelper;
     
 	public DamageListener(mcDungeons plugin) {
 		super();
 
 		this.plugin = plugin;
-		wgHelper = new WorldGuardHelper(plugin);
 	}
     
 	@EventHandler
