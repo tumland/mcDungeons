@@ -37,6 +37,9 @@ public class EntityHelper {
         if(entity.isDead()){
             return;
         }
+        if(plugin.getConfig().getBoolean("debug")){
+            plugin.logger.info("Entity " + entity.getType().toString() + " : Level = " + plugin.getLevel(entity));
+        }
         
         WorldGuardHelper wgHelper = new WorldGuardHelper(plugin);
         
@@ -189,6 +192,21 @@ public class EntityHelper {
         int serverDefaultLevel = plugin.getConfig().getInt("defaultLevel");
         mcdLevel level = plugin.getLevelConfigManager().getLevelObject(serverDefaultLevel);
         return level.getSettings().get(attributeName);
+    }
+    
+    public int getMaxLevel(Entity entity){
+        ArrayList<String> regionNames = plugin.getEntityRegistry().getRegions(entity);
+        int maxLevel = 1;
+                
+        for(String regionName : regionNames) {
+            // get region object
+            mcdRegion currRegion = plugin.getRegionConfigManager().getRegionByName(regionName);
+            if(currRegion != null){
+                maxLevel = Math.max(maxLevel,currRegion.getLevel());  
+            }
+        }
+        
+        return maxLevel;
     }
     
     private double getMaxRegionDoubleAttribute(Entity entity, String attributeName){

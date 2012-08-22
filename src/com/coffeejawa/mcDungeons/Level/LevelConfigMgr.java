@@ -97,13 +97,13 @@ public class LevelConfigMgr {
         
     }
     
-    public HashMap<Integer, mcdLevel> getLevels() {
-        return levels;
-    }
-
-    public void setLevels(HashMap<Integer, mcdLevel> levels) {
-        this.levels = levels;
-    }
+//    public HashMap<Integer, mcdLevel> getLevels() {
+//        return levels;
+//    }
+//
+//    public void setLevels(HashMap<Integer, mcdLevel> levels) {
+//        this.levels = levels;
+//    }
     // serialize is not working properly.
 //    private void Serialize(){
 //        for( int levelName : levels.keySet() ){
@@ -116,11 +116,17 @@ public class LevelConfigMgr {
         if(ret == null){
             plugin.logger.warning(String.format("Invalid level accessed: %d",levelIndex));
         }
-        
-        
-        return levels.get(levelIndex);
+        return ret;
     }
     
+    public boolean isLevel(int level){
+        if(this.getLevelObject(level) == null){
+            plugin.logger.info("Level "+ level + " doesn't exist!");
+            return false;
+        }
+        plugin.logger.info("Level "+ level + " exists!");
+        return true;
+    }
     
    
 }

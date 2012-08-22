@@ -14,6 +14,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -201,6 +202,10 @@ public class mcDungeons extends JavaPlugin {
 		return true;
 	}
 	
+	public int getLevel(Entity entity){
+	    return this.getEntityHelper().getMaxLevel(entity);
+	}
+	
 	
 	private boolean handleDungeonCommand(CommandSender sender, String[] args){
 	
@@ -344,7 +349,8 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Description: Sets region property values");
                 return true;
             }
-            String sectionName = "regions."+args[1];
+            String regionName = args[1];
+            String sectionName = "regions."+regionName;
             String propName = args[2];
             String value = args[3];
             
@@ -359,6 +365,8 @@ public class mcDungeons extends JavaPlugin {
                 return true;
             }
             
+
+            
             if(defaultRegionOptions.get(propName) instanceof Boolean){
                 config.set(sectionName+"."+propName, Boolean.parseBoolean(value));
             }
@@ -366,14 +374,20 @@ public class mcDungeons extends JavaPlugin {
                 config.set(sectionName+"."+propName, Double.parseDouble(value));
             }
             else if(defaultRegionOptions.get(propName) instanceof Integer){
+                if(propName.equalsIgnoreCase("level")){
+                    if(!this.getLevelConfigManager().isLevel(Integer.parseInt(value))){
+                        sender.sendMessage("Error: Level doesn't exist!");
+                        return true;
+                    }
+                }
                 config.set(sectionName+"."+propName, Integer.parseInt(value));
             }
             else{
-                sender.sendMessage("Failed to set "+args[1]+"'s property "+propName+" to "+value);
+                sender.sendMessage("Failed to set "+regionName+"'s property \""+propName+"\" to "+value);
                 return true;
             }
             
-            sender.sendMessage("Set "+args[1]+"'s property "+propName+" to "+value);
+            sender.sendMessage("Set "+regionName+"'s property \""+propName+"\" to "+value);
             
             configMgr.saveConfig();
             return true;
@@ -598,5 +612,5 @@ public class mcDungeons extends JavaPlugin {
         }  
         return true;
     }
-    
+        
 }
