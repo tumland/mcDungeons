@@ -25,7 +25,7 @@ public class DamageListener implements Listener
 	public void onEntityDamage	( EntityDamageEvent event )	
 	{
 		// Damage cause by player
-		if( event instanceof EntityDamageByEntityEvent ){
+		if( event instanceof EntityDamageByEntityEvent && ((EntityDamageByEntityEvent) event).getDamager() instanceof Player){
 			EntityDamageByEntityEvent damageEvent = (EntityDamageByEntityEvent) event;
 			Player playerDamager = null; 
 			
@@ -60,7 +60,7 @@ public class DamageListener implements Listener
 		}
 		
 		// Player being damaged
-		if( event instanceof EntityDamageByEntityEvent && event.getEntityType() == EntityType.PLAYER ){
+		if( event instanceof EntityDamageByEntityEvent && event.getEntity() instanceof Player ){
 			EntityDamageByEntityEvent damageEvent = (EntityDamageByEntityEvent) event;
 			Entity damager = null;
             Player player = (Player) event.getEntity();
