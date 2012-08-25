@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,6 +21,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.coffeejawa.mcDungeons.Dungeon.DungeonConfigMgr;
+import com.coffeejawa.mcDungeons.Dungeon.EditSession;
+import com.coffeejawa.mcDungeons.Dungeon.EditSessionManager;
 import com.coffeejawa.mcDungeons.Entities.mcdCreeper;
 import com.coffeejawa.mcDungeons.Entities.mcdEnderman;
 import com.coffeejawa.mcDungeons.Entities.mcdSkeleton;
@@ -153,10 +157,6 @@ public class mcDungeons extends JavaPlugin {
         return this.levelConfigManager;
     }
     
-    public void triggerDungeonSpawns(String dungeonName){
-        getDungeonConfigManager().getDungeonByName(dungeonName).triggerSpawns();
-    }
-    
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		String name = cmd.getName();
 		if (name.equalsIgnoreCase("mcd")){
@@ -178,9 +178,9 @@ public class mcDungeons extends JavaPlugin {
 				else if(arg.equalsIgnoreCase("region")){
                     handleRegionCommand(sender, Arrays.copyOfRange(args, 1, args.length));
 				}
-//				else if(arg.equalsIgnoreCase("dungeon")){
-//				    handleDungeonCommand(sender, Arrays.copyOfRange(args, 1, args.length));
-//				}
+				else if(arg.equalsIgnoreCase("dungeon")){
+				    handleDungeonCommand(sender, Arrays.copyOfRange(args, 1, args.length));
+				}
 				else if(arg.equalsIgnoreCase("debug")){
 				    if(!checkPermission(sender,"mcd.debug")){
 				        return true;
@@ -211,7 +211,7 @@ public class mcDungeons extends JavaPlugin {
 	
        if(args.length < 1){
             // display help
-            sender.sendMessage("Usage: /mcd dungeon [edit|finish|remove]");
+            sender.sendMessage("Usage: /mcd dungeon [edit|selectBlock|finish|remove|list]");
             return true;
         }
     
@@ -222,28 +222,57 @@ public class mcDungeons extends JavaPlugin {
 	    String arg = args[0];
         if(arg.equalsIgnoreCase("edit")){
             if(args.length != 2){
-                sender.sendMessage("Usage: /mcd dungeon edit <creature type>");
+                sender.sendMessage("Usage: /mcd dungeon edit <WorldGuard region name> <respawn time>");
                 sender.sendMessage("Description: Start editing dungeon.");
                 return true;
             }
-            EntityType entityType = EntityType.fromName(args[1]);
+
+            String regionName = args[1];
+            String strRespawnTime = args[2];
             
-            org.bukkit.Material type = ((Player) sender).getItemInHand().getType();
-            
-            if(!getEditSessionManager().startEditSession((Player) sender, type, entityType)){
+            if(!getEditSessionManager().startEditSession((Player) sender, regionName, strRespawnTime)){
                 // failed
-                sender.sendMessage("Failed to start editing. Try a different material.");
+                sender.sendMessage("Failed to start editing.");
+                return true;
+            }
+            sender.sendMessage("Begin editing " + regionName + " Dungeon");
+            return true;
+        }
+        else if(arg.equalsIgnoreCase("selectBlock")){
+            if(args.length != 2){
+                sender.sendMessage("Usage: /mcd dungeon selectBlock <creature type>");
+                sender.sendMessage("Description: Select a block to represent a creature. Uses currently selected block. Any block of this type placed will spawn the creature as indicated.");
+                return true;
+            }
+            if(!this.getEditSessionManager().isEditing((Player) sender)){
+                sender.sendMessage("Error: you aren't in edit mode!");
+                return true;
             }
             
-            sender.sendMessage("mcDungeons: entering edit mode. " + type.toString() + " blocks will spawn " + entityType.toString());
+            EditSession editSession = this.getEditSessionManager().getSession((Player) sender);
+            
+            
+            EntityType entityType = EntityType.fromName(args[1]);
+            
+            org.bukkit.Material materialType = ((Player) sender).getItemInHand().getType();
+            
+            if(!editSession.addMaterial(materialType, entityType)){
+                sender.sendMessage("Failed to add material. Try a different material.");
+                return true;
+            }
+            sender.sendMessage("mcDungeons: " + materialType.toString() + " blocks will spawn " + entityType.toString());
+            return true;
         }
         else if(arg.equalsIgnoreCase("finish")){
-            if(args.length != 2){
-                sender.sendMessage("Usage: /mcd dungeon finish <dungeon name>");
+            if(args.length != 1){
+                sender.sendMessage("Usage: /mcd dungeon finish");
                 sender.sendMessage("Description: Finish editing dungeon, save it under name provided.");
                 return true;
             }    
-            getEditSessionManager().endEditSession((Player) sender, args[1]);
+            if(!getEditSessionManager().endEditSession((Player) sender)){
+                sender.sendMessage("Error: cannot end edit session. Are you editing?");
+            }
+            sender.sendMessage("Finished editing.");
         }
         else if(arg.equalsIgnoreCase("remove")){
             if(args.length != 2){
@@ -255,8 +284,10 @@ public class mcDungeons extends JavaPlugin {
             
             if(!getDungeonConfigManager().removeDungeon(dungeonName)){
                 sender.sendMessage("Failed to remove dungeon. Does it exist?");
-                return false;
+                return true;
             }
+            sender.sendMessage("Removed dungeon: " + dungeonName);
+            return true;
         }
         else if(arg.equalsIgnoreCase("list")){
             if(args.length != 1 && args.length != 2){
@@ -267,6 +298,7 @@ public class mcDungeons extends JavaPlugin {
             
             if(args.length == 1){
                 sender.sendMessage(getDungeonConfigManager().getDungeons().keySet().toString());
+                return true;
             }
             else{
                 String dungeonName = args[1];
@@ -274,7 +306,6 @@ public class mcDungeons extends JavaPlugin {
             }
             return true;  
         }
-        
         else{
             return false;
         }
@@ -283,11 +314,7 @@ public class mcDungeons extends JavaPlugin {
 	
     
     private boolean handleRegionCommand(CommandSender sender, String[] args){
-        HashMap<String,Object> defaultRegionOptions;
-        defaultRegionOptions = new HashMap<String,Object>();
-        
-        defaultRegionOptions.put("level", 1);
-        defaultRegionOptions.put("enableSpawnControl", false);
+
                        
         RegionConfigMgr configMgr = getRegionConfigManager();
         ConfigurationSection config = getRegionConfigManager().getConfig();
@@ -302,6 +329,9 @@ public class mcDungeons extends JavaPlugin {
             return true;
         }
         
+        HashMap<String,Object> defaultRegionOptions = this.getRegionConfigManager().getDefaultRegionOptions();
+        
+        
         String arg = args[0];
         if (arg.equalsIgnoreCase("add") )
         {
@@ -312,6 +342,7 @@ public class mcDungeons extends JavaPlugin {
                 return true;
             }
 
+            String regionName = args[1];
 
             // make sure the region exists in worldguard
             WorldGuardHelper wgHelper = new WorldGuardHelper(this);
@@ -319,24 +350,15 @@ public class mcDungeons extends JavaPlugin {
                 sender.sendMessage("Add failed: Add region in WorldGuard first!");
                 return true;
             }
-            for( World world : getServer().getWorlds() ){
-                if(wgHelper.isRegion(args[1], world)){
-                    String regionType = wgHelper.getRegionType(args[1],world);
-                    if(!regionType.equalsIgnoreCase("cuboid")){
-                        sender.sendMessage("Region add failed: unsupported region type");
-                        return true;
-                    }
-                }
+            if(!wgHelper.isRegionTypeSupported(regionName)){
+                sender.sendMessage("Error: unsupported region type");
             }
              
             // add new region define
-            String sectionName = "regions."+args[1];
             // set up defaults
-            if(!config.isConfigurationSection(sectionName)){
-                config.createSection(sectionName, defaultRegionOptions);
-                configMgr.saveConfig();
-                configMgr.reloadConfig();
+            if(configMgr.addRegion(regionName)){
                 sender.sendMessage("Region "+args[1]+" added");
+                return true;
             }
             else{
                 sender.sendMessage("Error: region already exists in config.");
@@ -612,5 +634,5 @@ public class mcDungeons extends JavaPlugin {
         }  
         return true;
     }
-        
+   
 }

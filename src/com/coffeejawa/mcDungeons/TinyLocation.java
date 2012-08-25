@@ -15,6 +15,7 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
 
 public class TinyLocation implements ConfigurationSerializable {
  
+    @SuppressWarnings("unused")
     private final static long serialVersionUID = 1L;
     private String world;
     private double x;

@@ -8,6 +8,7 @@ import com.coffeejawa.mcDungeons.mcDungeons;
 import com.sk89q.worldedit.BlockVector;
 
 public class mcdRegion {
+    @SuppressWarnings("unused")
     private mcDungeons plugin;
     private String name;
     private int level;

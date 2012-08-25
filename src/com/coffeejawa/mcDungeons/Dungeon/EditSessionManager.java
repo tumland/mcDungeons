@@ -1,11 +1,11 @@
-package com.coffeejawa.mcDungeons;
+package com.coffeejawa.mcDungeons.Dungeon;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bukkit.Material;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+
+import com.coffeejawa.mcDungeons.mcDungeons;
 
 public class EditSessionManager {
     private mcDungeons plugin;
@@ -17,21 +17,31 @@ public class EditSessionManager {
         openEditSessions = new HashMap<Player,EditSession>();
     }
 
-    public boolean startEditSession(Player player, Material material, EntityType entityType){
+    public boolean startEditSession(Player player, String regionName, String strRespawnTime){
+        // does dungeon named regionName already exist?
+        if(plugin.getDungeonConfigManager().isDungeon(regionName)){
+            return false;
+        }
+        // convert string to long, hope this works!
+        long respawnTime = Integer.parseInt(strRespawnTime);
+        
         // is the player already editing?
         if(!isEditing(player)){
-            EditSession session = new EditSession(player, material, entityType);
+            EditSession session = new EditSession(plugin, player, regionName, respawnTime);
             openEditSessions.put(player,session);
+            return true;
         }
-        else{
-            return getSession(player).addMaterial(material, entityType);
-        }
-        return true;
+        return false;
     }
-    public void endEditSession(Player player, String dungeonName){
+    public boolean endEditSession(Player player){
+        if(!openEditSessions.containsKey(player)){
+            return false;
+        }
+        
         EditSession sess = openEditSessions.get(player);
-        sess.close(plugin, dungeonName);
+        sess.close();
         openEditSessions.remove(player);
+        return true;
     }
     
     public Map<Player, EditSession> getOpenEditSessions() {

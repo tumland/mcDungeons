@@ -44,7 +44,7 @@ public class WorldGuardHelper {
             }
             if(depth > 16)
                 continue;
-            if( isLocationInRegion(location, pr) ){
+            if( isInRegion(location, pr) ){
                 String name = pr.getId();
                 regionNames.add(name);
             }
@@ -53,7 +53,7 @@ public class WorldGuardHelper {
         return regionNames;
     }
 
-    public boolean isLocationInRegion(Location location, ProtectedRegion region) {
+    public boolean isInRegion(Location location, ProtectedRegion region) {
 
         String tn = region.getTypeName();
         com.sk89q.worldedit.BlockVector l0 = region.getMinimumPoint();      
@@ -79,6 +79,15 @@ public class WorldGuardHelper {
             return false;
         }
         return false;
+    }
+    public boolean isInRegion(Location location, String regionName) {
+        ProtectedRegion region = this.getRegion(regionName, location.getWorld());
+        if(region != null){
+            isInRegion(location, region);
+            return true;
+        }
+        return false;
+        
     }
     
     
@@ -154,4 +163,21 @@ public class WorldGuardHelper {
         return true;
     }
     
+    public boolean isRegionTypeSupported(String regionName){
+        WorldGuardHelper wgHelper = new WorldGuardHelper(plugin);
+        
+        if(!isRegionAnyWorld(regionName)){
+            return false;
+        }
+        
+        for( World world : plugin.getServer().getWorlds() ){
+            if(wgHelper.isRegion(regionName, world)){
+                String regionType = wgHelper.getRegionType(regionName,world);
+                if(!regionType.equalsIgnoreCase("cuboid")){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

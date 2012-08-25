@@ -4,8 +4,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 
-import com.coffeejawa.mcDungeons.EditSession;
 import com.coffeejawa.mcDungeons.mcDungeons;
+import com.coffeejawa.mcDungeons.Dungeon.EditSession;
 
 public class BlockListener implements Listener{
     mcDungeons plugin;

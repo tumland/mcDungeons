@@ -22,16 +22,28 @@ public class RegionConfigMgr {
     
     private HashMap<String,mcdRegion> regions;
     
+    HashMap<String,Object> defaultRegionOptions;
+
+    
     public RegionConfigMgr(mcDungeons plugin){
         this.plugin = plugin;
         
         regions = new HashMap<String,mcdRegion>();
+        
+        defaultRegionOptions = new HashMap<String,Object>();
+        
+        defaultRegionOptions.put("level", 1);
+        defaultRegionOptions.put("enableSpawnControl", false);
         
         // TODO: set up async task to save periodically save config to disk
         // avoid problems with server crashing
         Deserialize();
     }
     
+    public HashMap<String, Object> getDefaultRegionOptions() {
+        return defaultRegionOptions;
+    }
+
     public void reloadConfig() {
         if (regionConfigFile == null) {
             regionConfigFile = new File(plugin.getDataFolder(), "regions.yml");
@@ -116,4 +128,21 @@ public class RegionConfigMgr {
         return regions.get(regionName);
     }
     
+    public boolean addRegion(String regionName){
+        String sectionName = "regions." + regionName;
+    
+        if(!getConfig().isConfigurationSection(sectionName)){
+            getConfig().createSection(sectionName, defaultRegionOptions);
+            saveConfig();
+            reloadConfig();
+            
+            plugin.logger.info("Successfully added region");
+            
+            return true;
+        }
+        
+        plugin.logger.info("Failed to add region");
+        
+        return false;
+    }
 }

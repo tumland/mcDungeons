@@ -7,7 +7,9 @@ import com.coffeejawa.mcDungeons.mcDungeons;
 
 public class MoveListener implements Listener {
  
+    @SuppressWarnings("unused")
     private mcDungeons plugin;    
+    @SuppressWarnings("unused")
     private EntityHelper entityHelper;
     
     

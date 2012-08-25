@@ -4,13 +4,17 @@ import java.util.ArrayList;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.world.ChunkLoadEvent;
 
-import com.coffeejawa.mcDungeons.Dungeon;
+import com.coffeejawa.mcDungeons.Dungeon.Dungeon;
+import com.coffeejawa.mcDungeons.Dungeon.PointSpawner;
 import com.coffeejawa.mcDungeons.WorldGuardHelper;
 import com.coffeejawa.mcDungeons.mcDungeons;
 
@@ -23,16 +27,20 @@ public class SpawnListener implements Listener {
         this.plugin = plugin;
         wgHelper = new WorldGuardHelper(plugin);
     }
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onCreatureSpawn(CreatureSpawnEvent event){
-        Location loc = event.getLocation();
-//        Boolean isDungeonPresent = plugin.getDungeonHelper().isLocationInDungeon(loc);
-//        
-//        if(isDungeonPresent){
-//            event.setCancelled(true);
-//        }
+        Entity entity = event.getEntity();
+        if(event.isCancelled() ){
+            return;
+        }
         
-
+        Entity newEntity = plugin.getEntityHelper().replaceCreature(event.getEntity());
+        // if the entity is not replaced, we don't care
+        if(entity == newEntity){
+            return;
+        }
+        
+        Location loc = event.getLocation();
         ArrayList<String> regionNames = wgHelper.locationInRegionsNamed(loc);
         if(!regionNames.isEmpty()){
             // add to entity registry
@@ -41,8 +49,23 @@ public class SpawnListener implements Listener {
                 plugin.logger.info(String.format("Added to entity registry: %s",event.getEntity().getType().toString()));
             }
         }
-         
-        plugin.getEntityHelper().replaceCreature(event.getEntity());
+        
+        // add the new entity to a PointSpawner if we can show that the locations match
+        for(Dungeon dungeon : plugin.getDungeonConfigManager().getDungeons().values()){
+            PointSpawner spawner = dungeon.getPointSpawnerAtLocation(newEntity.getLocation());
+            if(spawner != null){
+                plugin.logger.info("entity added to pointspawner for dungeon " + dungeon.getName() );
+                spawner.setEntity(newEntity);
+            }
+        }
+        
+        
+        // if we replaced the entity, create a new event with the new entity
+        event.setCancelled(true);
+        CreatureSpawnEvent newEvent = new CreatureSpawnEvent((LivingEntity) newEntity, SpawnReason.CUSTOM);
+        newEntity.getServer().getPluginManager().callEvent(newEvent);
+        
+        
     }
     
     @EventHandler
@@ -55,15 +78,9 @@ public class SpawnListener implements Listener {
         Dungeon dungeon = plugin.getDungeonConfigManager().isEntityAssociated(event.getEntity());
         
         if(dungeon != null){
-            final String dungeonName = dungeon.getName();
+            plugin.logger.info("Created spawn timer for dungeon " + dungeon.getName());
             
-            plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin,  new Runnable()
-            {
-                public void run()
-                {
-                    plugin.triggerDungeonSpawns(dungeonName);
-                }
-            }, (long)200.0);
+            dungeon.createRespawnTimer(event.getEntity());
         }
     }
     

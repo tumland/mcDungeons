@@ -1,9 +1,8 @@
-package com.coffeejawa.mcDungeons;
+package com.coffeejawa.mcDungeons.Dungeon;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -19,16 +18,27 @@ public class DungeonConfigMgr {
     private FileConfiguration dungeonConfig = null;
     private File dungeonConfigFile = null;
     
-    private mcDungeons plugin;
+    private final mcDungeons plugin;
     
     private HashMap<String, Dungeon> dungeons;
     
-    public DungeonConfigMgr(mcDungeons plugin){
+    public DungeonConfigMgr(final mcDungeons plugin){
         this.plugin = plugin;
         
         dungeons = new HashMap<String,Dungeon>();
         
         reloadConfig();
+
+        
+        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() 
+        {
+            public void run() {
+                plugin.logger.info("Triggering spawns");
+                for( Dungeon dungeon : dungeons.values() ){
+                    dungeon.triggerSpawns();
+                }
+            }
+         }, 60L, 1200L);
     }
     
     public void reloadConfig() {
@@ -72,14 +82,6 @@ public class DungeonConfigMgr {
         return dungeonValues; // could be empty / null
     }
     
-    public boolean isDungeonPresent(String dungeonName){
-        List<String> dungeonNames = this.getConfig().getStringList("dungeons");
-        if(dungeonNames.contains(dungeonName)){
-            return true;
-        }
-        return false;
-    }
-    
     public HashMap<String, Dungeon> getDungeons() {
         return dungeons;
     }
@@ -95,7 +97,7 @@ public class DungeonConfigMgr {
     }
     
     public boolean removeDungeon(String dungeonName){
-        if(!isDungeonPresent(dungeonName)){
+        if(!isDungeon(dungeonName)){
             return false;
         }
         dungeons.remove(dungeonName);
@@ -126,4 +128,9 @@ public class DungeonConfigMgr {
         }
         return null;
     }
+    
+    public boolean isDungeon(String dungeonName){
+        return dungeons.containsKey(dungeonName);
+    }
+    
 }

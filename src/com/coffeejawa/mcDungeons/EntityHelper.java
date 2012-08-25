@@ -33,9 +33,10 @@ public class EntityHelper {
             replaceCreature(entity);
         }
     }
-    public void replaceCreature(Entity entity){
+    public Entity replaceCreature(Entity entity){
         if(entity.isDead()){
-            return;
+            plugin.logger.info("Entity replace failed: Entity is dead!");
+            return entity;
         }
         if(plugin.getConfig().getBoolean("debug")){
             plugin.logger.info("Entity " + entity.getType().toString() + " : Level = " + plugin.getLevel(entity));
@@ -65,7 +66,7 @@ public class EntityHelper {
           mcWorld.removeEntity((net.minecraft.server.EntityZombie) mcEntity);
           mcWorld.addEntity(zombie, SpawnReason.CUSTOM);
 
-          return;
+          return zombie.getBukkitEntity();
       }
       
       if (entityType == EntityType.CREEPER && mcEntity instanceof mcdCreeper == false){
@@ -79,7 +80,7 @@ public class EntityHelper {
           mcWorld.removeEntity((net.minecraft.server.EntityCreeper) mcEntity);
           mcWorld.addEntity(creeper, SpawnReason.CUSTOM);
 
-          return;
+          return creeper.getBukkitEntity();
       }
       
       if (entityType == EntityType.SKELETON && mcEntity instanceof mcdSkeleton == false){
@@ -93,7 +94,7 @@ public class EntityHelper {
           mcWorld.removeEntity((net.minecraft.server.EntitySkeleton) mcEntity);
           mcWorld.addEntity(skeleton, SpawnReason.CUSTOM);
 
-          return;
+          return skeleton.getBukkitEntity();
       }
       
       if (entityType == EntityType.SPIDER && mcEntity instanceof mcdSpider == false){
@@ -107,7 +108,7 @@ public class EntityHelper {
           mcWorld.removeEntity((net.minecraft.server.EntitySpider) mcEntity);
           mcWorld.addEntity(spider, SpawnReason.CUSTOM);
 
-          return;
+          return spider.getBukkitEntity();
       }
       
       if (entityType == EntityType.ENDERMAN && mcEntity instanceof mcdEnderman == false){
@@ -121,8 +122,12 @@ public class EntityHelper {
           mcWorld.removeEntity((net.minecraft.server.EntityEnderman) enderman);
           mcWorld.addEntity(enderman, SpawnReason.CUSTOM);
 
-          return;
+          return enderman.getBukkitEntity();
       }
+
+      plugin.logger.info("Entity replace failed: No custom entity match!");
+      return entity;
+
         
     }
     
