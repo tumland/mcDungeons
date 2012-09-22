@@ -12,13 +12,9 @@ import net.minecraft.server.MobEffectList;
 import net.minecraft.server.Navigation;
 import net.minecraft.server.PathfinderGoalBreakDoor;
 import net.minecraft.server.PathfinderGoalFloat;
-import net.minecraft.server.PathfinderGoalHurtByTarget;
-import net.minecraft.server.PathfinderGoalLookAtPlayer;
 import net.minecraft.server.PathfinderGoalMeleeAttack;
 import net.minecraft.server.PathfinderGoalMoveThroughVillage;
 import net.minecraft.server.PathfinderGoalMoveTowardsRestriction;
-import net.minecraft.server.PathfinderGoalNearestAttackableTarget;
-import net.minecraft.server.PathfinderGoalRandomLookaround;
 import net.minecraft.server.PathfinderGoalRandomStroll;
 import net.minecraft.server.World;
 

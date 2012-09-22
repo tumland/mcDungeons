@@ -8,7 +8,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 
 import com.coffeejawa.mcDungeons.TinyLocation;
-import com.coffeejawa.mcDungeons.mcDungeons;
 
 public class PointSpawner {
     private EntityType type;

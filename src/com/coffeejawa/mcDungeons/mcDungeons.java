@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
